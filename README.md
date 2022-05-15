@@ -13,7 +13,7 @@ For more information about Tinder's API, please check out [this repo](https://gi
 
 - [X] Forbidden strings list
 
-    Create a file named "forbidden_strings" and type the keywords and/or sentences that would make you feel uninterested about a recommendation, strings are separated by newlines.
+    Create a file named `forbidden_strings` and type the keywords and/or sentences that would make you feel uninterested about a recommendation, strings are separated by newlines.
 
 - [X] Known profiles list
 
@@ -25,9 +25,12 @@ For more information about Tinder's API, please check out [this repo](https://gi
 
 - [X] Automatic or manual likes
 
-    Toggle ASK_BEFORE_LIKE in order to set whether you want the bot to automatically like suggested profiles that match your criteria or get a selection of choices, using the manual mode also allows you to check your suggested match photos by typing "p".
+    Toggle `ASK_BEFORE_LIKE` in order to set whether you want the bot to automatically like suggested profiles that match your criteria or get a selection of choices, using the manual mode also allows you to check your suggested match photos by typing "p".
 
-- [ ] ~~Customizable internal settings (easy access to what's currently modified through constants).~~
+- [X] Customizable settings
+
+    Tweak the algorithm by playing around with the values within the `settings.ini` file. This file will be automatically generated during the first startup. Invalid values will be ignored and their defaults will be loaded instead.
+
 - [ ] ~~Main menu with account settings options (max distance, age range, etc.).~~
 
 # Requirements

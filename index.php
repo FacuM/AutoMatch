@@ -1,43 +1,203 @@
 <?php
 
-define('TOKEN_FILE', 'token');
-define('FORBIDDEN_STRINGS_FILE', 'forbidden_strings');
-define('KNOWN_PROFILES_FILE', 'known_profiles.json');
-
 define('DEBUG', false);
 
-// Progress text max length
-define('PROGRESS_MAX_LENGTH', 80); // characters
+define('SETTINGS_FILE', 'settings.ini');
+define('SETTINGS_MAX_SEPARATOR_LENGTH', 25);
 
-define('MILES_IN_KM', 1.60934);
+define('DEFAULT_SETTINGS', [
+    'ORIGIN_URL'             => [ 'value' => 'https://tinder.com',  'type' => 'string' ],
+    'BASE_URL'               => [ 'value' => 'api.gotinder.com',    'type' => 'string' ],
+    'TINDER_VERSION'         => [ 'value' => '3.27.1',              'type' => 'string' ],
 
-define('ORIGIN_URL',     'https://tinder.com');
-define('BASE_URL',       'api.gotinder.com');
-define('TINDER_VERSION', '3.27.1');
+    'TOKEN_FILE'             => [ 'value' => 'token',               'type' => 'string' ],
+    'FORBIDDEN_STRINGS_FILE' => [ 'value' => 'forbidden_strings',   'type' => 'string' ],
+    'KNOWN_PROFILES_FILE'    => [ 'value' => 'known_profiles.json', 'type' => 'string' ],
 
-// This is the user agent we're mocking.
-define('USER_AGENT', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36');
+    // Progress text max length
+    'PROGRESS_MAX_LENGTH'    => [ 'value' => 80,                    'type' => 'int',    'comment' => 'characters' ],
 
-// How much time to wait between requests if we're out of recommendations.
-define('NO_RECOMMENDATIONS_RETRY_INTERVAL', 5); // minutes
+    'MILES_IN_KM'            => [ 'value' => 1.60934,               'type' => 'float',  'comment' => 'kms to miles conversion ratio' ],
 
-/*
- * What's the maximum time to wait between requests once we've gone through all
- * the current set of recommendations.
- * 
- * This is a random number between 0 and this value.
- */
-define('MAX_SLEEP_TIME', 3); // seconds
+    // This is the user agent we're mocking.
+    'USER_AGENT'             => [
+        'value'     => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/101.0.4951.54 Safari/537.36',
+        'type'      => 'string',
+        'comment'   => 'User agent to use when making requests',
+    ],
 
-// Minimum length of a bio to be considered relevant.
-define('BIO_MIN_LENGTH', 200); // characters
+    // How much time to wait between requests if we're out of recommendations.
+    'NO_RECOMMENDATIONS_RETRY_INTERVAL' => [ 'value' => 5, 'type' => 'int', 'comment' => 'minutes' ],
 
-define('AUTO_LIKE',       true);
-define('ASK_BEFORE_LIKE', true);
-define('ASK_BEFORE_LIKE_DEFAULT_CHOICE', 'n'); // 'y' or 'n'
-define('AUTO_PASS',       true);
+    /*
+    * What's the maximum time to wait between requests once we've gone through all
+    * the current set of recommendations.
+    * 
+    * This is a random number between 0 and this value.
+    */
+    'MAX_SLEEP_TIME'         => [ 'value' => 3,     'type' => 'int', 'comment' => 'seconds' ],
 
-define('DISTANCE_TO_KM', true);
+    // Minimum length of a bio to be considered relevant.
+    'BIO_MIN_LENGTH'         => [ 'value' => 200,   'type' => 'int', 'comment' => 'characters' ],
+
+    'AUTO_LIKE'                      => [ 'value' => true, 'type' => 'bool'   ],
+    'ASK_BEFORE_LIKE'                => [ 'value' => true, 'type' => 'bool'   ],
+    'ASK_BEFORE_LIKE_DEFAULT_CHOICE' => [ 'value' => 'n',  'type' => 'string', 'comment' => 'y/n' ],
+    'AUTO_PASS'                      => [ 'value' => true, 'type' => 'bool'   ],
+
+    'DISTANCE_TO_KM'        => [ 'value' => true,   'type' => 'bool' ]
+]);
+
+function loadSettings() {
+    $settings = DEFAULT_SETTINGS;
+
+    if (file_exists( SETTINGS_FILE )) {
+        $iniSettings = file_get_contents( SETTINGS_FILE );
+
+        foreach (explode(PHP_EOL, $iniSettings) as $line) {
+            $line = trim($line);
+
+            if (empty($line) || $line[0] == ';') { continue; }
+
+            $parts = explode('=', $line, 2);
+
+            if (count($parts) != 2) { continue; }
+
+            $key    = trim($parts[0]);
+            $value  = trim($parts[1]);
+
+            $commentIndex = strpos($value, ';');
+            if ($commentIndex !== false) {
+                $value = trim( substr($value, 0, $commentIndex) );
+            }
+
+            if (isset($settings[$key])) {
+                $wasValid = true;
+
+                switch ($settings[$key]['type']) {
+                    case 'int':
+                        if (!is_numeric($value)) {
+                            $wasValid = false;
+
+                            break;
+                        }
+
+                        $value = (int) $value;
+
+                        break;
+                    case 'float':
+                        if (!is_numeric($value)) {
+                            $wasValid = false;
+
+                            break;
+                        }
+
+                        $value = (float) $value;
+
+                        if (!is_float($value)) {
+                            $wasValid = false;
+
+                            break;
+                        }
+
+                        break;
+                    case 'bool':
+                        if (empty($value) || $value == 'false') {
+                            $value = false;
+                        } else {
+                            $value = true;
+                        }
+
+                        $value = (bool) $value;
+
+                        break;
+                    case 'string':
+                        if ($value[0] == '"' && substr($value, -1) == '"') {
+                            $value = substr($value, 1, -1);
+                        }
+
+                        $value = (string) $value;
+
+                        break;
+                }
+
+                if (DEBUG) {
+                    print ($wasValid ? '✓' : '✗') . ' ' . $key . PHP_EOL;
+                }
+
+                if (!$wasValid) {
+                    trigger_error("Invalid value for setting \"$key\" (expected {$settings[$key]['type']}, got \"$value\"), using default value \"{$settings[$key]['value']}\"", E_USER_NOTICE);
+
+                    continue;
+                }
+            } else {
+                trigger_error("Unknown setting '$key'", E_USER_WARNING);
+            }
+        }
+    } else {
+        $maxSettingLength = 0;
+        $maxValueLength   = 0;
+
+        foreach ($settings as $key => $setting) {
+            if (strlen($key) > $maxSettingLength) {
+                $maxSettingLength = strlen($key);
+            }
+
+            if (strlen($setting['value']) > $maxValueLength) {
+                $maxValueLength = strlen($setting['value']);
+            }
+        }
+
+        if ($maxValueLength > SETTINGS_MAX_SEPARATOR_LENGTH) {
+            $maxValueLength = SETTINGS_MAX_SEPARATOR_LENGTH;
+        }
+
+        file_put_contents(
+            SETTINGS_FILE,
+            '; This file was automatically generated by AutoMatch.'   . PHP_EOL .
+            '; You can edit it to change the default settings.'       . PHP_EOL .
+            '; Invalid settings will be ignored and cause a notice.'  . PHP_EOL .
+            PHP_EOL
+        );
+
+        foreach ($settings as $key => $setting) {
+            $setting['comment'] =
+                isset($setting['comment'])
+                    ? $setting['comment'] . ' (' . $setting['type'] . ')'
+                    : $setting['type'];
+
+            $line = $key;
+
+            if (strlen($key) < $maxSettingLength) {
+                $line .= str_repeat(' ', $maxSettingLength - strlen($key));
+            }
+
+            $line .= ' = ';
+
+            $setting['value'] =
+                $setting['type'] == 'bool'
+                    ? ($setting['value'] ? 'true' : 'false')
+                    : $setting['value'];
+
+            $line .=
+                strpos($setting['value'], ' ') !== false
+                    ? '"' . $setting['value'] . '"'
+                    : $setting['value'];
+
+            if (strlen($setting['value']) < $maxValueLength) {
+                $line .= str_repeat(' ', $maxValueLength - strlen($setting['value']));
+            }
+
+            $line .= ' ; ' . $setting['comment'] . PHP_EOL;
+
+            file_put_contents( SETTINGS_FILE, $line, FILE_APPEND );
+        }
+    }
+
+    foreach ($settings as $key => $setting) {
+        define( $key, $setting['value'] );
+    }
+}
 
 /**
  * request
@@ -439,6 +599,10 @@ function bioHasForbiddenStrings($bio) {
         if (strpos($bio, $string) !== false) { return true; }
     }
 }
+
+print 'Parsing settings... ';
+loadSettings();
+print 'OK!' . PHP_EOL;
 
 $irrelevantReason = null;
 
