@@ -223,7 +223,7 @@ function request($url, $method = 'GET', $data = null) {
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
     curl_setopt($ch, CURLOPT_CUSTOMREQUEST,  $method);
 
-    curl_setopt($ch, CURLOPT_HTTPHEADER,     getHeaders());
+    curl_setopt($ch, CURLOPT_HTTPHEADER,     getHeaders( $method != 'GET' ));
 
     if ($data && $method != 'GET') {
         curl_setopt($ch, CURLOPT_POST, 1);
