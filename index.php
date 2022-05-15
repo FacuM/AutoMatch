@@ -233,7 +233,7 @@ function request($url, $method = 'GET', $data = null) {
     $result = curl_exec($ch);
 
     if (curl_errno($ch) || curl_getinfo($ch, CURLINFO_HTTP_CODE) != 200) {
-        throw new Exception('An unxpected error has occurred: ' . curl_error($ch) . ' - ' . $result);
+        throw new Exception('An unexpected error has occurred: ' . curl_error($ch) . ' - ' . $result);
     }
 
     curl_close($ch);
