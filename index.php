@@ -227,7 +227,7 @@ function request($url, $method = 'GET', $data = null) {
 
     if ($data && $method != 'GET') {
         curl_setopt($ch, CURLOPT_POST, 1);
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
     }
 
     $result = curl_exec($ch);
