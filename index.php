@@ -576,6 +576,12 @@ function bioHasRelevantText($bio) {
         return false;
     }
 
+    if (strlen(removeEmojis($bio)) < BIO_MIN_LENGTH) {
+        $irrelevantReason = 'bio is too short after removing emojis';
+
+        return false;
+    }
+
     return true;
 }
 
@@ -707,7 +713,7 @@ while (true) {
                 0,                                                           // start
                 PROGRESS_MAX_LENGTH - strlen($message) - 1                   // length
             );
-            
+
             print $message;
 
             if (!DEBUG) {
