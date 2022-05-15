@@ -600,7 +600,7 @@ function bioHasForbiddenStrings($bio) {
     }
 }
 
-print 'Parsing settings... ';
+print 'Parsing settings... ' . (DEBUG ? PHP_EOL : '');
 loadSettings();
 print 'OK!' . PHP_EOL;
 
