@@ -496,10 +496,11 @@ function readKnownProfiles() {
  * pass
  *
  * @param  string $userId
+ * @param  string $sNumber  The unique target user ID assigned to you by Tinder
  * 
  * @return void
  */
-function pass($userId) {
+function pass($userId, $sNumber) {
     if (DEBUG) {
         print 'Passing ' . $userId . '...' . PHP_EOL;
     }
@@ -507,7 +508,7 @@ function pass($userId) {
     storeKnownProfile($userId);
 
     try {
-        request('/pass/' . $userId, 'GET');
+        request('/pass/' . $userId, 'GET', [ 's_number' => $sNumber ]);
     } catch (Exception $e) {
         print 'Failed to pass ' . $userId . ': ' . $e->getMessage() . PHP_EOL;
 
@@ -521,10 +522,11 @@ function pass($userId) {
  * like
  *
  * @param  string $userId
+ * @param  string $sNumber  The unique target user ID assigned to you by Tinder
  * 
  * @return void
  */
-function like($userId) {
+function like($userId, $sNumber) {
     if (DEBUG) {
         print 'Liking ' . $userId . '...' . PHP_EOL;
     }
@@ -532,7 +534,7 @@ function like($userId) {
     storeKnownProfile($userId);
 
     try {
-        request('/like/' . $userId, 'POST');
+        request('/like/' . $userId, 'POST', [ 's_number' => $sNumber ]);
     } catch (Exception $e) {
         print 'Failed to like ' . $userId . ': ' . $e->getMessage() . PHP_EOL;
 
@@ -734,7 +736,7 @@ while (true) {
                 }
 
                 if (AUTO_PASS) {
-                    pass($person['user']['_id']);
+                    pass($person['user']['_id'], $person['s_number']);
                 }
 
                 continue;
@@ -745,7 +747,7 @@ while (true) {
             print
                 '===> ' . (AUTO_LIKE && !ASK_BEFORE_LIKE ? 'Liked' : 'Suggested') .
                 ' person: ' . $person['user']['name'] . ' (' . $age . 'y, ' . $distance . ' ' . (DISTANCE_TO_KM ? 'km' : 'mi') . '.)' .
-                ' with ID ' . $person['user']['_id'] . ',' .
+                ' with ID ' . $person['user']['_id'] . ' and SN ' . $person['s_number'] . ',' .
                 ' their bio says: ' . PHP_EOL . $person['user']['bio'] .
                 PHP_EOL;
 
@@ -753,7 +755,7 @@ while (true) {
                 if (in_array($person['user']['_id'], $knownProfiles)) {
                     print 'API BUG: Already liked this person, forcing pass... ';
 
-                    pass($person['user']['_id']);
+                    pass($person['user']['_id'], $person['s_number']);
 
                     print 'OK!' . PHP_EOL;
 
@@ -761,7 +763,7 @@ while (true) {
                 }
 
                 if (!ASK_BEFORE_LIKE) {
-                    like($person['user']['_id']);
+                    like($person['user']['_id'], $person['s_number']);
                 } else {
                     while (
                         !isset($line)
@@ -788,9 +790,9 @@ while (true) {
                         if (empty($line)) { $line = ASK_BEFORE_LIKE_DEFAULT_CHOICE; }
 
                         if ($line === 'y') {
-                            like($person['user']['_id']);
+                            like($person['user']['_id'], $person['s_number']);
                         } else if ($line === 'n') {
-                            pass($person['user']['_id']);
+                            pass($person['user']['_id'], $person['s_number']);
                         } else if ($line === 'p') {
                             print 'Photos:' . PHP_EOL;
 
