@@ -534,7 +534,7 @@ function like($userId, $sNumber) {
     storeKnownProfile($userId);
 
     try {
-        request('/like/' . $userId, 'POST', [ 's_number' => $sNumber ]);
+        request('/like/' . $userId, 'POST', [ 's_number' => (int) $sNumber ]);
     } catch (Exception $e) {
         print 'Failed to like ' . $userId . ': ' . $e->getMessage() . PHP_EOL;
 
