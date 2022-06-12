@@ -31,6 +31,10 @@ For more information about Tinder's API, please check out [this repo](https://gi
 
     Tweak the algorithm by playing around with the values within the `settings.ini` file. This file will be automatically generated during the first startup. Invalid values will be ignored and their defaults will be loaded instead.
 
+- [X] Spotify favorite track and artists
+
+    Suggested likes will show their favorite track, using the interactive mode will also let you check their favorite artists by typing "s" at the prompt.
+
 - [ ] ~~Main menu with account settings options (max distance, age range, etc.).~~
 
 # Requirements

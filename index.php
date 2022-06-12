@@ -748,6 +748,13 @@ while (true) {
                 '===> ' . (AUTO_LIKE && !ASK_BEFORE_LIKE ? 'Liked' : 'Suggested') .
                 ' person: ' . $person['user']['name'] . ' (' . $age . 'y, ' . $distance . ' ' . (DISTANCE_TO_KM ? 'km' : 'mi') . '.)' .
                 ' with ID ' . $person['user']['_id'] . ' and SN ' . $person['s_number'] . ',' .
+                (
+                    isset($person['spotify']) && isset($person['spotify']['spotify_theme_track'])
+                    &&
+                    $person['spotify'] && $person['spotify']['spotify_theme_track']
+                        ? ' their favorite track is "' . $person['spotify']['spotify_theme_track']['name'] . '" by "' . $person['spotify']['spotify_theme_track']['artists'][0]['name'] . '" and'
+                        : ''
+                ) .
                 ' their bio says: ' . PHP_EOL . $person['user']['bio'] .
                 PHP_EOL;
 
@@ -774,8 +781,13 @@ while (true) {
                             trim( strtolower($line) ) !== 'n'
                         )
                     ) {
+                        $hasTopTracks =
+                            isset($person['spotify']) && isset($person['spotify']['spotify_top_artists'])
+                            &&
+                            $person['spotify'] && $person['spotify']['spotify_top_artists'];
+
                         print
-                            'Do you like ' . $person['user']['name'] . '? (Yy|Nn|Pp = view photos) ['
+                            'Do you like ' . $person['user']['name'] . '? (Yy|Nn|Pp = view photos' . ($hasTopTracks ? '|Ss = top Spotify tracks' : '') . ') ['
                                 . strtoupper(ASK_BEFORE_LIKE_DEFAULT_CHOICE) . strtolower(ASK_BEFORE_LIKE_DEFAULT_CHOICE) .
                             ']: ';
 
@@ -798,6 +810,14 @@ while (true) {
 
                             foreach ($photos as $photo) {
                                 print ' - ' . $photo . PHP_EOL;
+                            }
+                        } else if ($line === 's' && $hasTopTracks) {
+                            print 'Top Spotify tracks:' . PHP_EOL;
+
+                            foreach ($person['spotify']['spotify_top_artists'] as $artist) {
+                                $track = &$artist['top_track'];
+
+                                print ' - "' . $track['name'] . '" by "' . $artist['name'] . '" - Preview: ' . $track['preview_url'] . PHP_EOL;
                             }
                         } else if (
                             $line !== 'y'
