@@ -744,14 +744,17 @@ while (true) {
 
             if (!DEBUG) { print PHP_EOL; }
 
+            $hasFavoriteTrack = 
+                isset($person['spotify']) && isset($person['spotify']['spotify_theme_track'])
+                &&
+                $person['spotify'] && $person['spotify']['spotify_theme_track'];
+
             print
                 '===> ' . (AUTO_LIKE && !ASK_BEFORE_LIKE ? 'Liked' : 'Suggested') .
                 ' person: ' . $person['user']['name'] . ' (' . $age . 'y, ' . $distance . ' ' . (DISTANCE_TO_KM ? 'km' : 'mi') . '.)' .
                 ' with ID ' . $person['user']['_id'] . ' and SN ' . $person['s_number'] . ',' .
                 (
-                    isset($person['spotify']) && isset($person['spotify']['spotify_theme_track'])
-                    &&
-                    $person['spotify'] && $person['spotify']['spotify_theme_track']
+                    $hasFavoriteTrack
                         ? ' their favorite track is "' . $person['spotify']['spotify_theme_track']['name'] . '" by "' . $person['spotify']['spotify_theme_track']['artists'][0]['name'] . '" and'
                         : ''
                 ) .
@@ -787,7 +790,7 @@ while (true) {
                             $person['spotify'] && $person['spotify']['spotify_top_artists'];
 
                         print
-                            'Do you like ' . $person['user']['name'] . '? (Yy|Nn|Pp = view photos' . ($hasTopTracks ? '|Ss = top Spotify tracks' : '') . ') ['
+                            'Do you like ' . $person['user']['name'] . '? (Yy|Nn|Pp = view photos' . ($hasTopTracks || $hasFavoriteTrack ? '|Ss = Spotify favorites info' : '') . ') ['
                                 . strtoupper(ASK_BEFORE_LIKE_DEFAULT_CHOICE) . strtolower(ASK_BEFORE_LIKE_DEFAULT_CHOICE) .
                             ']: ';
 
@@ -811,13 +814,24 @@ while (true) {
                             foreach ($photos as $photo) {
                                 print ' - ' . $photo . PHP_EOL;
                             }
-                        } else if ($line === 's' && $hasTopTracks) {
-                            print 'Top Spotify tracks:' . PHP_EOL;
+                        } else if ($line === 's' && ($hasTopTracks || $hasFavoriteTrack)) {
+                            if ($hasFavoriteTrack) {
+                                print
+                                    'Favorite track: "' . $person['spotify']['spotify_theme_track']['name'] . '" by "' . $person['spotify']['spotify_theme_track']['artists'][0]['name'] . '" - Preview: ' . $person['spotify']['spotify_theme_track']['preview_url'] .
+                                    PHP_EOL .
+                                    PHP_EOL;
+                            }
 
-                            foreach ($person['spotify']['spotify_top_artists'] as $artist) {
-                                $track = &$artist['top_track'];
+                            if ($hasTopTracks) {
+                                print 'Top Spotify tracks:' . PHP_EOL;
 
-                                print ' - "' . $track['name'] . '" by "' . $artist['name'] . '" - Preview: ' . $track['preview_url'] . PHP_EOL;
+                                foreach ($person['spotify']['spotify_top_artists'] as $artist) {
+                                    $track = &$artist['top_track'];
+
+                                    print ' - "' . $track['name'] . '" by "' . $artist['name'] . '" - Preview: ' . $track['preview_url'] . PHP_EOL;
+                                }
+
+                                print PHP_EOL;
                             }
                         } else if (
                             $line !== 'y'
