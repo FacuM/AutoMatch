@@ -1,3 +1,9 @@
+# WARNING: This script does not work!
+
+### Please, do not waste your recommendations on trying it out. Tinder will reply 200 to most requests without any prior validation and your likes won't go through.
+
+### I'm currently working on a simpler browser-based solution.
+
 AutoMatch
 ==========
 
